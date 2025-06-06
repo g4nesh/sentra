@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Transcription Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.97);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="30" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="70" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="80" r="2.5" fill="rgba(255,255,255,0.1)"/></svg>');
+            animation: float 20s linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateX(-100px); }
+            100% { transform: translateX(100px); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            margin-bottom: 40px;
+        }
+
+        .upload-area {
+            border: 3px dashed #e2e8f0;
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(145deg, #f8fafc, #f1f5f9);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .upload-area:hover::before {
+            left: 100%;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background: linear-gradient(145deg, #f0f4ff, #e6f0ff);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: linear-gradient(145deg, #f0f4ff, #e6f0ff);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtext {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+        }
+
+        .supported-formats {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .error {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #dc2626;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #fca5a5;
+            display: none;
+            font-weight: 500;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        .loading-text {
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .transcript-container {
+            margin-top: 40px;
+        }
+
+        .speaker-section {
+            margin-bottom: 32px;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .speaker-section:hover {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .speaker-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 24px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .speaker-header::before {
+            content: '🎤';
+            font-size: 1.2rem;
+        }
+
+        .speaker-content {
+            padding: 24px;
+        }
+
+        .transcript-line {
+            margin-bottom: 16px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .transcript-line:hover {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            transform: translateX(4px);
+        }
+
+        .transcript-line:last-child {
+            margin-bottom: 0;
+        }
+
+        .timestamp {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-right: 12px;
+            margin-bottom: 8px;
+        }
+
+        .transcript-text {
+            color: #334155;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        .ai-indicator {
+            display: inline-block;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 12px;
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .ai-score {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-left: 8px;
+            font-weight: 500;
+        }
+
+        .ai-stats {
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #fef3c7, #fbbf24);
+            border-radius: 12px;
+            border: 1px solid #f59e0b;
+        }
+
+        .ai-stats-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-stats-title::before {
+            content: '🤖';
+        }
+
+        .ai-stats-content {
+            color: #92400e;
+            font-size: 0.9rem;
+        }
+
+        .speaker-1 .speaker-header {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        }
+
+        .speaker-2 .speaker-header {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+
+        .speaker-3 .speaker-header {
+            background: linear-gradient(135deg, #06b6d4, #0891b2);
+        }
+
+        .speaker-4 .speaker-header {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .github-section {
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 40px;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            border-radius: 16px;
+            color: white;
+        }
+
+        .github-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .github-section p {
+            color: #a0aec0;
+            margin-bottom: 24px;
+            font-size: 1.1rem;
+        }
+
+        .github-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #2ea44f;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .github-button:hover {
+            background: #2c974b;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 164, 79, 0.2);
+        }
+
+        .github-button svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .upload-area {
+                padding: 40px 20px;
+            }
+            
+            .speaker-content {
+                padding: 16px;
+            }
+            
+            .transcript-line {
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>Audio Transcription Studio</h1>
+            <p>Professional AI-powered transcription with speaker detection and analysis</p>
+        </div>
+        
+        <div class="content">
+            <div class="error" id="error"></div>
+            
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="fileInput" accept=".mp3,.mp4,.wav,.m4a,.ogg,.flac">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Drop your audio file here or click to browse</div>
+                    <div class="upload-subtext">Drag and drop for instant upload</div>
+                    <div class="supported-formats">MP3 • MP4 • WAV • M4A • OGG • FLAC</div>
+                </div>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Transcribing and analyzing your audio...</div>
+            </div>
+            
+            <div class="transcript-container" id="transcriptContainer"></div>
+            
+            <div class="github-section">
+                <h2>⭐ Star Us on GitHub</h2>
+                <p>If you find this tool helpful, please consider giving us a star on GitHub!</p>
+                <a href="https://github.com/g4nesh/sentrix" target="_blank" class="github-button">
+                    <svg viewBox="0 0 16 16" width="16" height="16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                    </svg>
+                    Star on GitHub
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const transcriptContainer = document.getElementById('transcriptContainer');
+        const errorDiv = document.getElementById('error');
+        const loadingDiv = document.getElementById('loading');
+
+        // Handle file selection
+        uploadArea.onclick = () => fileInput.click();
+        
+        fileInput.onchange = handleFileSelect;
+
+        // Handle drag and drop
+        uploadArea.ondragover = (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        };
+
+        uploadArea.ondragleave = () => {
+            uploadArea.classList.remove('dragover');
+        };
+
+        uploadArea.ondrop = (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        };
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        function formatAIScore(score) {
+            return (score * 100).toFixed(1) + '%';
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+
+        function handleFile(file) {
+            // Reset UI
+            errorDiv.style.display = 'none';
+            transcriptContainer.innerHTML = '';
+            loadingDiv.style.display = 'block';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/transcribe', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingDiv.style.display = 'none';
+                if (data.error) {
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                } else {
+                    // Process and display transcriptions for each speaker
+                    Object.entries(data.speakers).forEach(([speakerId, segments]) => {
+                        const speakerSection = document.createElement('div');
+                        speakerSection.className = `speaker-section speaker-${parseInt(speakerId) + 1}`;
+                        
+                        const speakerHeader = document.createElement('div');
+                        speakerHeader.className = 'speaker-header';
+                        speakerHeader.textContent = `Speaker ${parseInt(speakerId) + 1}`;
+                        speakerSection.appendChild(speakerHeader);
+
+                        const speakerContent = document.createElement('div');
+                        speakerContent.className = 'speaker-content';
+
+                        // Calculate AI statistics for this speaker  
+                        const aiStats = segments.reduce((stats, segment) => {
+                            if (segment.is_ai_generated) {
+                                stats.aiSegments++;
+                                stats.totalAIScore += segment.ai_score;
+                            }
+                            stats.totalSegments++;
+                            return stats;
+                        }, { aiSegments: 0, totalSegments: 0, totalAIScore: 0 });
+
+                        segments.forEach(segment => {
+                            const line = document.createElement('div');
+                            line.className = 'transcript-line';
+                            
+                            const timestamp = document.createElement('span');
+                            timestamp.className = 'timestamp';
+                            timestamp.textContent = `${formatTime(segment.start)} - ${formatTime(segment.end)}`;
+                            
+                            const textSpan = document.createElement('div');
+                            textSpan.className = 'transcript-text';
+                            textSpan.textContent = segment.text;
+
+                            line.appendChild(timestamp);
+                            line.appendChild(textSpan);
+
+                            if (segment.is_ai_generated) {
+                                const aiIndicator = document.createElement('span');
+                                aiIndicator.className = 'ai-indicator';
+                                aiIndicator.textContent = 'AI Detected';
+                                
+                                const aiScore = document.createElement('span');
+                                aiScore.className = 'ai-score';
+                                aiScore.textContent = `(${formatAIScore(segment.ai_score)})`;
+                                
+                                line.appendChild(aiIndicator);
+                                line.appendChild(aiScore);
+                            }
+
+                            speakerContent.appendChild(line);
+                        });
+
+                        // Add AI statistics for this speaker
+                        if (aiStats.totalSegments > 0) {
+                            const statsDiv = document.createElement('div');
+                            statsDiv.className = 'ai-stats';
+                            
+                            const statsTitle = document.createElement('div');
+                            statsTitle.className = 'ai-stats-title';
+                            statsTitle.textContent = 'AI Detection Analysis';
+                            
+                            const statsContent = document.createElement('div');
+                            statsContent.className = 'ai-stats-content';
+                            const aiPercentage = (aiStats.aiSegments / aiStats.totalSegments * 100).toFixed(1);
+                            const avgAIScore = aiStats.totalAIScore / aiStats.totalSegments;
+                            statsContent.textContent = `${aiStats.aiSegments} of ${aiStats.totalSegments} segments flagged as AI-generated (${aiPercentage}%) • Average confidence: ${formatAIScore(avgAIScore)}`;
+                            
+                            statsDiv.appendChild(statsTitle);
+                            statsDiv.appendChild(statsContent);
+                            speakerContent.appendChild(statsDiv);
+                        }
+
+                        speakerSection.appendChild(speakerContent);
+                        transcriptContainer.appendChild(speakerSection);
+                    });
+                }
+            })
+            .catch(error => {
+                loadingDiv.style.display = 'none';
+                errorDiv.textContent = 'Error: ' + error.message;
+                errorDiv.style.display = 'block';
+            });
+        }
+    </script>
+</body>
+</html>

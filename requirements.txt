@@ -1,0 +1,10 @@
+flask==2.0.1
+openai==1.12.0
+whisper==1.1.10
+sounddevice==0.4.6
+numpy==1.24.3
+python-dotenv==1.0.1
+faster-whisper==0.9.0
+torch==2.1.0
+torchaudio==2.1.0
+werkzeug==2.0.1
