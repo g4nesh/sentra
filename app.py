@@ -19,7 +19,7 @@ app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
 app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
 
 # Sapling AI API configuration
-SAPLING_API_KEY = [redacted]
+SAPLING_API_KEY = "2L93SILP3SE7YJ2934YN1JN8CIH41K91"
 SAPLING_API_URL = "https://api.sapling.ai/api/v1/aidetect"
 
 def check_ai_content(text):
